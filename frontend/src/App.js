@@ -4,6 +4,11 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
 
+// Import new ML visualization components
+import TrafficPredictionChart from './components/TrafficPredictionChart';
+import NeuralNetworkViz from './components/NeuralNetworkViz';
+import ScenarioComparison from './components/ScenarioComparison';
+
 // ==================== INTERNATIONALIZATION ====================
 const translations = {
   en: {
@@ -121,12 +126,23 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [language, setLanguage] = useState('en');
   const [showAssumptions, setShowAssumptions] = useState(false);
+
+  // New ML Prediction State
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'prediction', 'comparison', 'model'
+  const [prediction50, setPrediction50] = useState(null);
+  const [prediction60, setPrediction60] = useState(null);
+  const [modelInfo, setModelInfo] = useState(null);
+  const [trafficData, setTrafficData] = useState(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+
   const t = translations[language];
 
-  // Fetch baseline data on mount
+  // Fetch baseline data and ML model info on mount
   useEffect(() => {
     fetchBaseline();
     fetchGeojson();
+    fetchModelInfo();
+    fetchTrafficData();
   }, []);
 
   // Simulate on tax amount change
@@ -178,6 +194,70 @@ function App() {
       console.error('Error in simulation:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // New ML API Calls
+  const fetchTrafficData = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/traffic/current`);
+      if (response.ok) {
+        const data = await response.json();
+        setTrafficData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching traffic data:', error);
+    }
+  };
+
+  const fetchModelInfo = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/model/info`);
+      if (response.ok) {
+        const data = await response.json();
+        setModelInfo(data);
+      }
+    } catch (error) {
+      console.error('Error fetching model info:', error);
+    }
+  };
+
+  const predictTraffic = async (scenario) => {
+    setPredictionLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/traffic/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          speed_limit_scenario: scenario,
+          prediction_hours: 24
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (scenario === 'current_50mph') {
+          setPrediction50(data);
+        } else {
+          setPrediction60(data);
+        }
+        return data;
+      }
+    } catch (error) {
+      console.error(`Error predicting ${scenario}:`, error);
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
+
+  const runBothPredictions = async () => {
+    setPredictionLoading(true);
+    try {
+      await Promise.all([
+        predictTraffic('current_50mph'),
+        predictTraffic('optimized_60mph')
+      ]);
+    } finally {
+      setPredictionLoading(false);
     }
   };
 
@@ -234,10 +314,52 @@ function App() {
         </div>
       </header>
 
+      {/* Tab Navigation */}
+      <div style={{
+        backgroundColor: 'white',
+        borderBottom: '1px solid #e5e7eb',
+        padding: '0 32px'
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          maxWidth: '1400px',
+          margin: '0 auto'
+        }}>
+          {[
+            { id: 'overview', label: '📊 Overview', icon: '📊' },
+            { id: 'prediction', label: '🧠 ML Prediction', icon: '🧠' },
+            { id: 'comparison', label: '⚖️ Comparison', icon: '⚖️' },
+            { id: 'model', label: '🔬 Model Info', icon: '🔬' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
+                backgroundColor: 'transparent',
+                color: activeTab === tab.id ? '#3b82f6' : '#6b7280',
+                fontSize: '14px',
+                fontWeight: activeTab === tab.id ? '600' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="main-content">
-        {/* Sidebar */}
-        <aside className="sidebar">
+        {/* Overview Tab - Original Content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Sidebar */}
+            <aside className="sidebar">
           <div className="sidebar-card">
             <h2>{t.sidebar.title}</h2>
             
@@ -434,6 +556,141 @@ function App() {
             </div>
           </div>
         </section>
+          </>
+        )}
+
+        {/* ML Prediction Tab */}
+        {activeTab === 'prediction' && (
+          <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '600', color: '#111827' }}>
+                Traffic Flow Prediction
+              </h2>
+              <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#6b7280' }}>
+                LSTM neural network predicts traffic speeds and emissions for the next 24 hours
+              </p>
+
+              {/* Current Traffic Status */}
+              {trafficData && (
+                <div style={{
+                  display: 'flex',
+                  gap: '16px',
+                  marginBottom: '24px',
+                  padding: '16px',
+                  backgroundColor: '#f9fafb',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div>
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>Current Speed:</span>
+                    <strong style={{ fontSize: '18px', color: '#111827', marginLeft: '8px' }}>
+                      {trafficData.latest_speed_mph} mph
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>Congestion:</span>
+                    <span style={{
+                      fontSize: '14px',
+                      marginLeft: '8px',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: trafficData.congestion_level === 'Low' ? '#d1fae5' : trafficData.congestion_level === 'Moderate' ? '#fed7aa' : '#fecaca',
+                      color: trafficData.congestion_level === 'Low' ? '#065f46' : trafficData.congestion_level === 'Moderate' ? '#92400e' : '#991b1b'
+                    }}>
+                      {trafficData.congestion_level}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Prediction Controls */}
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                <button
+                  onClick={() => predictTraffic('current_50mph')}
+                  disabled={predictionLoading}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: predictionLoading ? 'not-allowed' : 'pointer',
+                    opacity: predictionLoading ? 0.6 : 1
+                  }}
+                >
+                  Predict 50 mph Scenario
+                </button>
+                <button
+                  onClick={() => predictTraffic('optimized_60mph')}
+                  disabled={predictionLoading}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: predictionLoading ? 'not-allowed' : 'pointer',
+                    opacity: predictionLoading ? 0.6 : 1
+                  }}
+                >
+                  Predict 60 mph Scenario
+                </button>
+                <button
+                  onClick={runBothPredictions}
+                  disabled={predictionLoading}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#8b5cf6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: predictionLoading ? 'not-allowed' : 'pointer',
+                    opacity: predictionLoading ? 0.6 : 1
+                  }}
+                >
+                  Run Both Predictions
+                </button>
+              </div>
+
+              {predictionLoading && (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '16px' }}>🔄</div>
+                  <p>Running LSTM prediction...</p>
+                </div>
+              )}
+            </div>
+
+            {/* Prediction Charts */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              {prediction50 && (
+                <TrafficPredictionChart predictionData={prediction50} scenario="current_50mph" />
+              )}
+              {prediction60 && (
+                <TrafficPredictionChart predictionData={prediction60} scenario="optimized_60mph" />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Comparison Tab */}
+        {activeTab === 'comparison' && (
+          <div style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto' }}>
+            <ScenarioComparison scenario50={prediction50} scenario60={prediction60} />
+          </div>
+        )}
+
+        {/* Model Info Tab */}
+        {activeTab === 'model' && (
+          <div style={{ padding: '32px', maxWidth: '1000px', margin: '0 auto' }}>
+            <NeuralNetworkViz modelInfo={modelInfo} />
+          </div>
+        )}
       </div>
 
       {/* Footer */}

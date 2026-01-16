@@ -9,7 +9,9 @@
     "react-leaflet": "^4.2.1",
     "leaflet": "^1.9.4",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "recharts": "^2.10.3",
+    "framer-motion": "^10.18.0"
   },
   "scripts": {
     "start": "react-scripts start",
