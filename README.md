@@ -66,7 +66,7 @@ See `API_SPECIFICATION.md` for full details.
 
 ---
 
-[Alt text for screen readers](Screenshot 2026-01-17 124400.png)
+![Alt text for screen readers](Screenshot 2026-01-17 124400.png)
 
 **Version**: 1.0.0  
 **Last Updated**: January 2026  
