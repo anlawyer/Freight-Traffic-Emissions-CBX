@@ -1,0 +1,62 @@
+<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="3.40.7-Bratislava">
+  <identifier>lion</identifier>
+  <parentidentifier></parentidentifier>
+  <language>ENG</language>
+  <type>dataset</type>
+  <title>LION</title>
+  <abstract>LION is a single line representation of New York City streets containing address ranges and other information.
+
+The LION file has been maintained as a major component of the Department of City Planning's Geosupport System.</abstract>
+  <keywords vocabulary="Search keys">
+    <keyword>Streets</keyword>
+    <keyword>Roads</keyword>
+    <keyword>Roadbeds</keyword>
+    <keyword>LION</keyword>
+    <keyword>Transportation</keyword>
+    <keyword>Department of City Planning</keyword>
+    <keyword>DCP</keyword>
+    <keyword>New York City</keyword>
+    <keyword>NYC</keyword>
+    <keyword>LIONdistricts</keyword>
+  </keywords>
+  <contact>
+    <contactAddress>
+      <type>both</type>
+      <address>120 Broadway, 31st Floor</address>
+      <city>New York</city>
+      <administrativearea>NY</administrativearea>
+      <postalcode>10271</postalcode>
+      <country></country>
+    </contactAddress>
+    <name></name>
+    <organization>New York City Department of City Planning (DCP)</organization>
+    <position></position>
+    <voice></voice>
+    <fax></fax>
+    <email>DCPopendata@planning.nyc.gov</email>
+    <role></role>
+  </contact>
+  <links/>
+  <dates/>
+  <fees></fees>
+  <constraints type="Limitations of use">The Department of City Planning make no representation as to the accuracy of the information or its suitability for any purposes. The Department and the City disclaim any liability for errors that may be contained herein.</constraints>
+  <rights>Department of City Planning (DCP)</rights>
+  <encoding></encoding>
+  <crs>
+    <spatialrefsys nativeFormat="Wkt">
+      <wkt>PROJCRS["NAD83 / New York Long Island (ftUS)",BASEGEOGCRS["NAD83",DATUM["North American Datum 1983",ELLIPSOID["GRS 1980",6378137,298.257222101,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],ID["EPSG",4269]],CONVERSION["SPCS83 New York Long Island zone (US survey foot)",METHOD["Lambert Conic Conformal (2SP)",ID["EPSG",9802]],PARAMETER["Latitude of false origin",40.1666666666667,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8821]],PARAMETER["Longitude of false origin",-74,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8822]],PARAMETER["Latitude of 1st standard parallel",41.0333333333333,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8823]],PARAMETER["Latitude of 2nd standard parallel",40.6666666666667,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8824]],PARAMETER["Easting at false origin",984250,LENGTHUNIT["US survey foot",0.304800609601219],ID["EPSG",8826]],PARAMETER["Northing at false origin",0,LENGTHUNIT["US survey foot",0.304800609601219],ID["EPSG",8827]]],CS[Cartesian,2],AXIS["easting (X)",east,ORDER[1],LENGTHUNIT["US survey foot",0.304800609601219]],AXIS["northing (Y)",north,ORDER[2],LENGTHUNIT["US survey foot",0.304800609601219]],USAGE[SCOPE["Engineering survey, topographic mapping."],AREA["United States (USA) - New York - counties of Bronx; Kings; Nassau; New York; Queens; Richmond; Suffolk."],BBOX[40.47,-74.26,41.3,-71.8]],ID["EPSG",2263]]</wkt>
+      <proj4>+proj=lcc +lat_0=40.1666666666667 +lon_0=-74 +lat_1=41.0333333333333 +lat_2=40.6666666666667 +x_0=300000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs</proj4>
+      <srsid>245</srsid>
+      <srid>2263</srid>
+      <authid>EPSG:2263</authid>
+      <description>NAD83 / New York Long Island (ftUS)</description>
+      <projectionacronym>lcc</projectionacronym>
+      <ellipsoidacronym>EPSG:7019</ellipsoidacronym>
+      <geographicflag>false</geographicflag>
+    </spatialrefsys>
+  </crs>
+  <extent>
+    <spatial crs="EPSG:2263" minz="0" miny="40.47721099999999694" dimensions="2" maxy="40.91769099999999781" maxx="-73.69920600000000377" minx="-74.26037999999999784" maxz="0"/>
+  </extent>
+</qgis>

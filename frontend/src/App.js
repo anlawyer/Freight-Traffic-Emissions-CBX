@@ -132,7 +132,19 @@ function App() {
   const [prediction50, setPrediction50] = useState(null);
   const [prediction60, setPrediction60] = useState(null);
   const [modelInfo, setModelInfo] = useState(null);
-  const [trafficData, setTrafficData] = useState(null);
+  const [trafficData, setTrafficData] = useState({});
+
+  // Helper function to determine congestion level based on speed
+  const getCongestionLevel = (speed) => {
+    if (speed >= 0) {
+      if (speed < 25) return { level: 'Severe', color: '#dc2626', bgColor: '#fecaca' }; // Red
+      if (speed < 45) return { level: 'High', color: '#ea580c', bgColor: '#fed7aa' };   // Orange
+      if (speed < 55) return { level: 'Moderate', color: '#d97706', bgColor: '#fde68a' }; // Yellow
+      return { level: 'Optimal', color: '#16a34a', bgColor: '#d1fae5' }; // Green
+    }
+    return { level: 'Unknown', color: '#6b7280', bgColor: '#f3f4f6' }; // Gray for unknown/loading
+  };
+
   const [predictionLoading, setPredictionLoading] = useState(false);
 
   const t = translations[language];
@@ -592,12 +604,20 @@ function App() {
                     <span style={{
                       fontSize: '14px',
                       marginLeft: '8px',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      backgroundColor: trafficData.congestion_level === 'Low' ? '#d1fae5' : trafficData.congestion_level === 'Moderate' ? '#fed7aa' : '#fecaca',
-                      color: trafficData.congestion_level === 'Low' ? '#065f46' : trafficData.congestion_level === 'Moderate' ? '#92400e' : '#991b1b'
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      fontWeight: '500',
+                      backgroundColor: getCongestionLevel(trafficData.latest_speed_mph).bgColor,
+                      color: getCongestionLevel(trafficData.latest_speed_mph).color,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
                     }}>
-                      {trafficData.congestion_level}
+                      {getCongestionLevel(trafficData.latest_speed_mph).level}
+                      {getCongestionLevel(trafficData.latest_speed_mph).level === 'Severe' && ' 🚨'}
+                      {getCongestionLevel(trafficData.latest_speed_mph).level === 'High' && ' ⚠️'}
+                      {getCongestionLevel(trafficData.latest_speed_mph).level === 'Moderate' && ' ⚠️'}
+                      {getCongestionLevel(trafficData.latest_speed_mph).level === 'Optimal' && ' ✅'}
                     </span>
                   </div>
                 </div>

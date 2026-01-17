@@ -1,18 +1,70 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+// Default model architecture to use if none is provided
+const DEFAULT_MODEL = {
+  layers: [
+    { type: 'input', units: 24, activation: 'tanh' },
+    { type: 'lstm', units: 128, activation: 'tanh' },
+    { type: 'dropout', rate: 0.2 },
+    { type: 'dense', units: 64, activation: 'relu' },
+    { type: 'output', units: 1, activation: 'linear' }
+  ],
+  optimizer: 'adam',
+  loss: 'mse',
+  metrics: ['mae'],
+  total_params: 0
+};
+
 /**
  * Neural Network Architecture Visualization
  * Visual representation of the LSTM model structure
  */
 const NeuralNetworkViz = ({ modelInfo }) => {
-  // Handle different response structures from the API
-  // API returns: {status: 'ready', model: {layers: [...], total_params: ...}}
-  // OR: {status: 'not_initialized', message: '...'}
-  const model = modelInfo?.model || modelInfo;
+  // Use the provided model or fall back to default
+  const model = modelInfo?.model?.layers ? modelInfo.model : DEFAULT_MODEL;
+  const layers = model.layers || [];
+  const totalParams = model.total_params || 0;
 
-  // Check if model is not ready or unavailable
-  if (!modelInfo || modelInfo.status === 'not_initialized' || !model || !model.layers || model.available === false) {
+  // Define layer visualization properties
+  const getLayerColor = (layerType) => {
+    const type = layerType?.toLowerCase();
+    switch (type) {
+      case 'lstm':
+        return { bg: '#3b82f6', text: '#ffffff' };  // Blue
+      case 'dropout':
+        return { bg: '#8b5cf6', text: '#ffffff' };  // Purple
+      case 'dense':
+        return { bg: '#10b981', text: '#ffffff' };  // Green
+      case 'input':
+        return { bg: '#f59e0b', text: '#ffffff' };  // Amber
+      case 'output':
+        return { bg: '#ef4444', text: '#ffffff' };  // Red
+      default:
+        return { bg: '#6b7280', text: '#ffffff' };  // Gray
+    }
+  };
+
+  const getLayerIcon = (layerType) => {
+    const type = layerType?.toLowerCase();
+    switch (type) {
+      case 'lstm':
+        return '🧠';
+      case 'dropout':
+        return '⚡';
+      case 'dense':
+        return '🎯';
+      case 'input':
+        return '🔢';
+      case 'output':
+        return '📊';
+      default:
+        return '🔘';
+    }
+  };
+
+  // If no model info is available or model is not ready
+  if (!modelInfo || !modelInfo.model) {
     return (
       <div style={{
         padding: '40px',
@@ -34,84 +86,111 @@ const NeuralNetworkViz = ({ modelInfo }) => {
     );
   }
 
-  const layers = model.layers;
-  const totalParams = model.total_params;
-
-  // Define layer visualization properties
-  const getLayerColor = (layerType) => {
-    switch (layerType) {
-      case 'LSTM':
-        return { bg: '#3b82f6', text: '#ffffff' };
-      case 'Dropout':
-        return { bg: '#8b5cf6', text: '#ffffff' };
-      case 'Dense':
-        return { bg: '#10b981', text: '#ffffff' };
-      default:
-        return { bg: '#6b7280', text: '#ffffff' };
-    }
-  };
-
-  const getLayerIcon = (layerType) => {
-    switch (layerType) {
-      case 'LSTM':
-        return '🧠';
-      case 'Dropout':
-        return '⚡';
-      case 'Dense':
-        return '🎯';
-      default:
-        return '🔷';
-    }
-  };
-
   return (
     <div style={{
-      width: '100%',
       backgroundColor: 'white',
       borderRadius: '12px',
-      padding: '24px',
-      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+      padding: '20px',
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+      marginBottom: '20px',
+      minHeight: '300px',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{
+        marginBottom: '20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '10px'
+      }}>
         <h3 style={{
-          margin: '0 0 8px 0',
-          fontSize: '18px',
+          margin: 0,
+          color: '#111827',
+          fontSize: '16px',
           fontWeight: '600',
-          color: '#111827'
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
         }}>
-          LSTM Model Architecture
+          <span>Model Architecture</span>
         </h3>
+
         <div style={{
           display: 'flex',
-          gap: '16px',
-          fontSize: '13px',
-          color: '#6b7280'
+          gap: '12px',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+          alignItems: 'center'
         }}>
-          <span>
-            <strong>{layers.length}</strong> layers
-          </span>
-          <span>•</span>
-          <span>
-            <strong>{totalParams.toLocaleString()}</strong> parameters
-          </span>
-          <span>•</span>
-          <span>
-            {model.is_trained ? (
-              <span style={{ color: '#10b981' }}>✓ Trained</span>
-            ) : (
-              <span style={{ color: '#f59e0b' }}>⚠ Not Trained</span>
-            )}
-          </span>
+          {model.optimizer && (
+            <div style={{
+              backgroundColor: '#f3f4f6',
+              color: '#4b5563',
+              fontSize: '12px',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <span>Optimizer:</span>
+              <span style={{ fontWeight: '600' }}>{model.optimizer}</span>
+            </div>
+          )}
+
+          {model.loss && (
+            <div style={{
+              backgroundColor: '#f3f4f6',
+              color: '#4b5563',
+              fontSize: '12px',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <span>Loss:</span>
+              <span style={{ fontWeight: '600' }}>{model.loss}</span>
+            </div>
+          )}
+
+          {totalParams > 0 && (
+            <div style={{
+              backgroundColor: '#f3f4f6',
+              color: '#4b5563',
+              fontSize: '12px',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <span>Parameters:</span>
+              <span style={{ fontWeight: '600' }}>{totalParams.toLocaleString()}</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Layer Visualization */}
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        position: 'relative'
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '20px',
+        flexWrap: 'wrap',
+        marginTop: '10px',
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '200px',
+        padding: '20px 0'
       }}>
         {layers.map((layer, index) => {
           const colors = getLayerColor(layer.type);
@@ -125,9 +204,13 @@ const NeuralNetworkViz = ({ modelInfo }) => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 style={{
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '16px',
-                  position: 'relative'
+                  gap: '10px',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  backgroundColor: '#f9fafb',
+                  border: '1px solid #e5e7eb'
                 }}
               >
                 {/* Layer Badge */}
@@ -148,52 +231,36 @@ const NeuralNetworkViz = ({ modelInfo }) => {
 
                 {/* Layer Card */}
                 <div style={{
-                  flex: 1,
-                  padding: '16px',
-                  borderRadius: '8px',
-                  backgroundColor: '#f9fafb',
-                  border: '1px solid #e5e7eb'
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '10px'
                 }}>
                   <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '4px'
+                    fontSize: '12px',
+                    color: colors.text,
+                    textAlign: 'center',
+                    marginTop: '8px',
+                    fontWeight: '500',
+                    textTransform: 'capitalize'
                   }}>
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#111827'
-                    }}>
-                      {layer.type}
-                    </span>
-                    <span style={{
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      backgroundColor: colors.bg,
-                      color: colors.text
-                    }}>
-                      {layer.params.toLocaleString()} params
-                    </span>
+                    {layer.type}
+                    {layer.units && ` (${layer.units})`}
+                    {layer.rate && ` ${Math.round(layer.rate * 100)}%`}
+                    {layer.activation && `\n${layer.activation}`}
                   </div>
 
                   <div style={{
-                    fontSize: '12px',
-                    color: '#6b7280',
-                    display: 'flex',
-                    gap: '16px',
-                    flexWrap: 'wrap'
+                    fontSize: '11px',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: colors.bg,
+                    color: colors.text
                   }}>
-                    <span>Output: {layer.output_shape}</span>
-                    {layer.units && <span>Units: {layer.units}</span>}
-                    {layer.activation && <span>Activation: {layer.activation}</span>}
-                    {layer.dropout_rate && <span>Dropout: {(layer.dropout_rate * 100).toFixed(0)}%</span>}
+                    {layer.units ? `${layer.units} units` : 'layer'}
                   </div>
                 </div>
               </motion.div>
-
-              {/* Connector Arrow */}
               {index < layers.length - 1 && (
                 <div style={{
                   width: '2px',
