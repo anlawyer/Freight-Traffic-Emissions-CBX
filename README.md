@@ -72,6 +72,15 @@ See `API_SPECIFICATION.md` for full details.
 ![Alt text for screen readers](4.png)
 ![Alt text for screen readers](5.png)
 
+# Sources/Datasets
+- https://a816-dohbesp.nyc.gov/IndicatorPublic/data-explorer/climate/?id=2143#display=trend
+- https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9/about_data
+- https://data.cityofnewyork.us/City-Government/LION/2v4z-66xt/about_data
+- https://a816-dohbesp.nyc.gov/IndicatorPublic/data-features/hvi/
+- https://data.cityofnewyork.us/Transportation/New-York-City-Truck-Routes-Map-/wnu3-egq7
+- https://a816-dohbesp.nyc.gov/IndicatorPublic/data-explorer/asthma/?id=2414#display=map
+- https://gisportalny.dot.ny.gov/portalny/apps/webappviewer/index.html?id=28537cbc8b5941e19cf8e959b16797b4
+
 **Version**: 1.0.0  
 **Last Updated**: January 2026  
 **Status**: Production Ready for Hackathon
