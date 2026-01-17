@@ -1,6 +1,7 @@
 # Urban Futures LEAP - Freight Tax Climate Impact Tool
 
 A web app that models how a freight tax on the Cross-Bronx Expressway impacts air quality and health outcomes in Soundview, the Bronx.
+https://sriyathotakura.github.io/Scroll/
 
 ## What it does
 
@@ -24,7 +25,6 @@ The model uses economic elasticity (how truck companies respond to taxes) to est
 **Frontend**: React + Leaflet  
 **Data**: Socrata Open Data API (NYC health data)
 
-https://sriyathotakura.github.io/Scroll/
 ## Setup
 
 ### Backend
