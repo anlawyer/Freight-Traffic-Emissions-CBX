@@ -246,16 +246,40 @@ def get_latest_traffic_data() -> Dict:
     try:
         speed_df = fetcher.fetch_cross_bronx_traffic_speeds(limit=100)
 
+        if speed_df.empty:
+            logger.warning("Empty speed dataframe received")
+            return {
+                'latest_speed_mph': 45.0,
+                'avg_speed_24h': 42.0,
+                'congestion_level': 'Moderate',
+                'data_as_of': datetime.now().isoformat(),
+                'total_records': 0
+            }
+
+        # Ensure speed column is numeric and drop any NaN values
+        speed_df['speed'] = pd.to_numeric(speed_df['speed'], errors='coerce')
+        speed_df = speed_df.dropna(subset=['speed'])
+
+        if speed_df.empty:
+            logger.warning("No valid speed values after cleaning")
+            return {
+                'latest_speed_mph': 45.0,
+                'avg_speed_24h': 42.0,
+                'congestion_level': 'Moderate',
+                'data_as_of': datetime.now().isoformat(),
+                'total_records': 0
+            }
+
         # Calculate summary statistics
-        latest_speed = speed_df['speed'].iloc[0] if not speed_df.empty else 45.0
-        avg_speed_24h = speed_df['speed'].mean() if not speed_df.empty else 42.0
+        latest_speed = float(speed_df['speed'].iloc[0])
+        avg_speed_24h = float(speed_df['speed'].mean())
         congestion_level = "Low" if latest_speed > 45 else "Moderate" if latest_speed > 30 else "High"
 
         return {
             'latest_speed_mph': round(latest_speed, 1),
             'avg_speed_24h': round(avg_speed_24h, 1),
             'congestion_level': congestion_level,
-            'data_as_of': speed_df['data_as_of'].iloc[0].isoformat() if not speed_df.empty else datetime.now().isoformat(),
+            'data_as_of': speed_df['data_as_of'].iloc[0].isoformat() if 'data_as_of' in speed_df.columns else datetime.now().isoformat(),
             'total_records': len(speed_df)
         }
     finally:

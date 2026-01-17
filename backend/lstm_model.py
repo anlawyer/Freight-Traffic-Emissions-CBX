@@ -300,11 +300,23 @@ class TrafficFlowLSTM:
             layers_info = []
             for i, layer in enumerate(self.model.layers):
                 layer_config = layer.get_config()
+
+                # Safely get output shape - it might be a property or attribute
+                try:
+                    if hasattr(layer, 'output_shape'):
+                        output_shape_str = str(layer.output_shape)
+                    elif hasattr(layer, 'output'):
+                        output_shape_str = str(layer.output.shape)
+                    else:
+                        output_shape_str = 'Unknown'
+                except:
+                    output_shape_str = 'Unknown'
+
                 layer_info = {
                     'index': i,
                     'name': layer.name,
                     'type': layer.__class__.__name__,
-                    'output_shape': str(layer.output_shape),
+                    'output_shape': output_shape_str,
                     'params': layer.count_params()
                 }
 

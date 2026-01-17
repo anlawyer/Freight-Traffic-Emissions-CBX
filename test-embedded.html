@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test React Embedding</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .react-section {
+            background: #f9fafb;
+            padding: 60px 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="section hero">
+        <h1>Test Page</h1>
+        <p>Scroll down or click button to see React app</p>
+        <button onclick="document.getElementById('react-root').scrollIntoView({ behavior: 'smooth' })">
+            View React Dashboard ↓
+        </button>
+    </div>
+
+    <div class="react-section">
+        <h2 style="text-align: center; margin-bottom: 40px;">React App Should Load Below:</h2>
+        <div id="react-root">
+            <!-- Loading state -->
+            <div style="text-align: center; padding: 100px 20px; color: #6b7280;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🧠</div>
+                <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 12px;">Loading ML Dashboard...</h2>
+                <div style="margin-top: 24px;">
+                    <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- React Bundle -->
+    <link rel="stylesheet" href="frontend/build/static/css/main.b5b782c9.css">
+    <script src="frontend/build/static/js/main.c1850014.js"></script>
+
+    <script>
+        // Debug info
+        console.log('Page loaded');
+        console.log('Looking for #react-root:', document.getElementById('react-root'));
+
+        // Check if React loaded
+        setTimeout(() => {
+            const reactRoot = document.getElementById('react-root');
+            if (reactRoot && reactRoot.innerHTML.includes('Loading')) {
+                console.error('React did not mount! Check console for errors.');
+                reactRoot.innerHTML = '<div style="text-align:center;padding:40px;color:red;"><h2>❌ React Failed to Load</h2><p>Check browser console (F12) for errors</p></div>';
+            } else {
+                console.log('✓ React appears to have mounted successfully');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

@@ -30,6 +30,19 @@
                 <p class="text-sm uppercase tracking-widest text-slate-400 mt-8">
                     15 miles. 200,000 trucks. One heavy burden on SOUNDVIEW BRONX.
                 </p>
+
+                <!-- Link to ML Dashboard -->
+                <div class="mt-12">
+                    <a href="#react-section"
+                       class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-green-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                       onclick="document.getElementById('react-section').scrollIntoView({ behavior: 'smooth', block: 'start' }); return false;">
+                        <span>🧠 View ML Dashboard</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </a>
+                    <p class="text-xs text-gray-400 mt-3">LSTM Neural Network Traffic Flow Prediction</p>
+                </div>
             </div>
         </div>
     </div>
@@ -136,14 +149,22 @@
                         </p>
                     </div>
                 </div>
-                <div class="step" data-step="6">
-                    <h2>Data Visualization</h2>
-                    <p>Interactive visualization of environmental impact data.</p>
-                    <canvas id="dataCanvas" width="400" height="300"></canvas>
-                </div>
             </div>
         </div>
     </div>
+
+    <!-- React App Section -->
+    <section id="react-section" style="background: #f9fafb; padding: 20px 0;">
+        <div style="max-width: 100%; margin: 0 auto;">
+            <iframe
+                src="http://localhost:3000"
+                style="width: 100%; height: 100vh; border: none; display: block;"
+                title="ML Dashboard"
+                frameborder="0"
+                allow="fullscreen"
+            ></iframe>
+        </div>
+    </section>
 
     <!-- Scripts -->
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
