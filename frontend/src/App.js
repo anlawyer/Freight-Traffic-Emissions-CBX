@@ -744,6 +744,20 @@ function App() {
                   <div className="legend-color" style={{ backgroundColor: '#3b82f6' }}></div>
                   <span>{language === 'en' ? 'Cross-Bronx Expressway' : 'Autopista'}</span>
                 </div>
+                <div className="legend-item">
+                  <img 
+                    src="/images/urban-severance.jpg" 
+                    alt="Urban Severance" 
+                    style={{ 
+                      width: '20px', 
+                      height: '20px', 
+                      objectFit: 'cover',
+                      borderRadius: '4px',
+                      marginRight: '8px'
+                    }} 
+                  />
+                  <span>Environmental Impact: Urban Severance</span>
+                </div>
               </div>
             </section>
           </>
