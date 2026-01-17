@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CROSS BRONX: Concrete Severance</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans antialiased">
+    <!-- Hero Section -->
+    <div class="relative h-screen overflow-hidden">
+        <!-- Map Container -->
+        <div id="map" class="absolute inset-0 z-0"></div>
+        
+        <!-- Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-b from-white/40 to-white z-10 pointer-events-none"></div>
+        
+        <!-- Text Content -->
+        <div class="relative z-20 h-full flex flex-col justify-center items-center text-center px-4 pointer-events-none">
+            <div id="hero-content" class="max-w-4xl mx-auto transform transition-all duration-500 pointer-events-auto">
+                <p class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">CROSS BRONX</p>
+                <h1 class="text-7xl font-semibold tracking-tighter text-slate-900 mb-6 leading-tight">
+                    Concrete Severance
+                </h1>
+                <p class="text-2xl font-medium text-slate-500 mb-8">
+                    Recalibrating the Cross Bronx Corridor
+                </p>
+                <p class="text-sm uppercase tracking-widest text-slate-400 mt-8">
+                    15 miles. 200,000 trucks. One heavy burden on SOUNDVIEW BRONX.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Scrollytelling Content -->
+        <div id="scrolly">
+            <div class="scrolly-content">
+                <div class="step" data-step="1">
+                    <h2>The Corridor</h2>
+                    <p>Explore the major freight routes that cross through the Bronx, carrying goods but also contributing to local pollution.</p>
+                </div>
+                <div class="step" data-step="2">
+                    <h2>Environmental Impact: Urban Severance</h2>
+                    <p>3D visualization reveals how highway infrastructure creates "green space debt." Taller hexagons show neighborhoods where residents lack access to parks. The glowing red traffic corridors slice through communities, creating barriers to nature.</p>
+
+                    <!-- Park Access Legend -->
+                    <div id="park-access-legend" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.3);">
+                        <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #333;">Access to Parks (Green Space Debt)</h4>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1;">
+                                <div style="height: 24px; background: linear-gradient(to right, #FF1493, #FF4500, #FFA500, #FFD700, #90EE90, #228B22); border-radius: 4px; position: relative;">
+                                    <!-- Value markers -->
+                                    <div style="position: absolute; top: -18px; left: 0%; font-size: 9px; color: #666; font-weight: 600;">0%</div>
+                                    <div style="position: absolute; top: -18px; left: 20%; font-size: 9px; color: #666; font-weight: 600;">20%</div>
+                                    <div style="position: absolute; top: -18px; left: 40%; font-size: 9px; color: #666; font-weight: 600;">40%</div>
+                                    <div style="position: absolute; top: -18px; left: 60%; font-size: 9px; color: #666; font-weight: 600;">60%</div>
+                                    <div style="position: absolute; top: -18px; left: 80%; font-size: 9px; color: #666; font-weight: 600;">80%</div>
+                                    <div style="position: absolute; top: -18px; right: 0%; font-size: 9px; color: #666; font-weight: 600;">100%</div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #666;">
+                                    <span>High Debt (Tall)</span>
+                                    <span>Low Debt (Short)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="margin: 12px 0 0 0; font-size: 10px; color: #888; line-height: 1.4;">
+                            <strong>Inverted visualization:</strong> Height represents "green space debt" — lower park access creates taller hexagons. Red highways show physical barriers cutting off communities from nature.
+                        </p>
+                    </div>
+                </div>
+                <div class="step" data-step="3">
+                    <h2>Community Vulnerability</h2>
+                    <p>Visualize health vulnerabilities through asthma rates and the Health Vulnerability Index.</p>
+                </div>
+                <div class="step" data-step="4">
+                    <h2>Priority Zone</h2>
+                    <p>Heat Vulnerability Index (HVI) across NYC neighborhoods. Darker purple areas show lower vulnerability, while orange areas indicate higher heat vulnerability requiring intervention.</p>
+
+                    <!-- HVI Legend -->
+                    <div id="hvi-legend" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                        <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #333;">Heat Vulnerability Index</h4>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1;">
+                                <div style="height: 20px; background: linear-gradient(to right, #000004, #3B0F70, #8C2981, #DE4968, #FE9F6D, #FCFFA4); border-radius: 4px;"></div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px; color: #666;">
+                                    <span>Less Vulnerable</span>
+                                    <span>More Vulnerable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="margin: 8px 0 0 0; font-size: 10px; color: #888; line-height: 1.4;">Measures neighborhood risk from extreme heat based on surface temperature, green space, AC access, and vulnerable populations.</p>
+                    </div>
+                </div>
+                <div class="step" data-step="5">
+                    <h2>The Incision: Traffic & Asthma</h2>
+                    <p>3D visualization reveals the stark correlation between traffic volume (shown in neon red) and childhood asthma rates. Taller hexagons indicate higher asthma rates among children aged 5-17. The bright red traffic corridors slice through neighborhoods with elevated respiratory illness.</p>
+
+                    <!-- Asthma Legend -->
+                    <div id="asthma-legend" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.3);">
+                        <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #333;">Childhood Asthma Rates (Ages 5-17)</h4>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1;">
+                                <div style="height: 24px; background: linear-gradient(to right, #000004, #3B0F70, #8C2981, #DE4968, #FE9F6D, #FCFFA4); border-radius: 4px; position: relative;">
+                                    <!-- Value markers -->
+                                    <div style="position: absolute; top: -18px; left: 0%; font-size: 9px; color: #666; font-weight: 600;">4k</div>
+                                    <div style="position: absolute; top: -18px; left: 20%; font-size: 9px; color: #666; font-weight: 600;">13k</div>
+                                    <div style="position: absolute; top: -18px; left: 40%; font-size: 9px; color: #666; font-weight: 600;">22k</div>
+                                    <div style="position: absolute; top: -18px; left: 60%; font-size: 9px; color: #666; font-weight: 600;">31k</div>
+                                    <div style="position: absolute; top: -18px; left: 80%; font-size: 9px; color: #666; font-weight: 600;">40k</div>
+                                    <div style="position: absolute; top: -18px; right: 0%; font-size: 9px; color: #666; font-weight: 600;">46k</div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #666;">
+                                    <span>Lower Rates</span>
+                                    <span>Higher Rates</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="margin: 12px 0 0 0; font-size: 10px; color: #888; line-height: 1.4;">
+                            <strong>Rate per 100,000 population.</strong> Height and color represent asthma prevalence. Red traffic corridors show the environmental burden.
+                        </p>
+                    </div>
+                </div>
+                <div class="step" data-step="6">
+                    <h2>Data Visualization</h2>
+                    <p>Interactive visualization of environmental impact data.</p>
+                    <canvas id="dataCanvas" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <script src="https://unpkg.com/scrollama"></script>
+    <script src="script.js"></script>
+</body>
+</html>

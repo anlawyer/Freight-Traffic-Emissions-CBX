@@ -38,8 +38,8 @@ body {
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 /* ==================== HEADER ==================== */
@@ -119,9 +119,10 @@ body {
 .main-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
   gap: 1rem;
   padding: 1rem;
+  min-height: 0;
 }
 
 /* ==================== SIDEBAR ==================== */

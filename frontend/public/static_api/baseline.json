@@ -1,0 +1,9 @@
+{
+  "uhf_district": "402",
+  "location": "Hunts Point/Mott Haven",
+  "baseline_pm25_ug_m3": 13.2,
+  "baseline_asthma_er_visits": 340,
+  "nta_code": "Soundview/Mott Haven",
+  "hvi_score": 5,
+  "data_source": "NYC EPIQUERY, NYC Community Health Survey, EPA Air Quality"
+}

@@ -16,6 +16,11 @@ from datetime import datetime
 # Import our custom modules
 from data_fetcher import NYCTrafficDataFetcher, get_latest_traffic_data, get_training_data_for_lstm
 from lstm_model import TrafficFlowLSTM, get_model_or_fallback
+from analytics import (
+    AdvancedAnalytics,
+    create_analytics_engine,
+    MonteCarloConfig
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -111,6 +116,7 @@ HVI_SCORE_SOUNDVIEW = 5  # Heat Vulnerability Index
 # Initialize LSTM model (will be loaded/trained on startup)
 lstm_model: Optional[TrafficFlowLSTM] = None
 traffic_data_fetcher: Optional[NYCTrafficDataFetcher] = None
+advanced_analytics: Optional[AdvancedAnalytics] = None
 
 
 # ==================== INFERENCE FUNCTIONS ====================
@@ -332,17 +338,18 @@ def initialize_lstm_model():
 
             # Optionally train on startup (comment out if too slow for demo)
             # This will use synthetic data if real API fails
-            try:
-                logger.info("Fetching training data...")
-                X, y, speed_min, speed_max, _ = get_training_data_for_lstm()
+            # DISABLED to prevent crash on M2 Pro
+            # try:
+            #     logger.info("Fetching training data...")
+            #     X, y, speed_min, speed_max, _ = get_training_data_for_lstm()
 
-                logger.info("Training LSTM model (this may take a few minutes)...")
-                history = lstm_model.train(X, y, epochs=30, batch_size=32)
+            #     logger.info("Training LSTM model (this may take a few minutes)...")
+            #     history = lstm_model.train(X, y, epochs=30, batch_size=32)
 
-                logger.info(f"Training complete. Final loss: {history.get('final_loss', 'N/A')}")
-                lstm_model.save_model(speed_min, speed_max)
-            except Exception as e:
-                logger.warning(f"Could not train model on startup: {str(e)}")
+            #     logger.info(f"Training complete. Final loss: {history.get('final_loss', 'N/A')}")
+            #     lstm_model.save_model(speed_min, speed_max)
+            # except Exception as e:
+            #     logger.warning(f"Could not train model on startup: {str(e)}")
 
         logger.info("LSTM model ready")
 
@@ -551,8 +558,8 @@ def predict_traffic_flow(request: TrafficPredictionRequest):
     """
     global lstm_model
 
-    if lstm_model is None:
-        raise HTTPException(status_code=503, detail="LSTM model not initialized")
+    # lstm_model is guaranteed to be either TrafficFlowLSTM or FallbackModelWrapper
+    # courtesy of get_model_or_fallback()
 
     try:
         # Get recent traffic data with fallback to synthetic data if needed
@@ -808,12 +815,201 @@ def get_soundview_geojson():
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize LSTM model on application startup"""
+    """Initialize LSTM model and analytics engine on application startup"""
+    global advanced_analytics
+    
     logger.info("="*60)
     logger.info("URBAN FUTURES LEAP - STARTING UP")
     logger.info("="*60)
     initialize_lstm_model()
+    
+    # Initialize advanced analytics engine
+    logger.info("Initializing Advanced Analytics Engine...")
+    advanced_analytics = create_analytics_engine(
+        residential_penalty=1.5,
+        monte_carlo_iterations=10000
+    )
+    logger.info("  ✓ HMM for Environmental States")
+    logger.info("  ✓ Monte Carlo Simulation (10,000 iterations)")
+    logger.info("  ✓ A* Pathfinding with Residential Penalty")
     logger.info("Application ready!")
+
+
+# ==================== ADVANCED ANALYTICS ENDPOINTS ====================
+
+class HMMPredictionRequest(BaseModel):
+    """Request model for HMM prediction"""
+    predicted_speeds: List[float] = None
+    prediction_hours: int = 24
+    baseline_pm25: float = 13.2
+
+
+@app.post("/analytics/hmm/predict", tags=["Advanced Analytics"])
+async def predict_environmental_states(request: HMMPredictionRequest):
+    """
+    Predict hidden environmental states using Viterbi Algorithm.
+    
+    Uses a Hidden Markov Model to identify the most likely sequence
+    of health-risk states over a 24-hour cycle:
+    - Free Flow / Healthy
+    - Congested / High Exposure
+    - Gridlock / Toxic
+    
+    If predicted_speeds is not provided, uses LSTM to generate them.
+    """
+    global advanced_analytics, lstm_model
+    
+    if advanced_analytics is None:
+        raise HTTPException(status_code=503, detail="Analytics engine not initialized")
+    
+    try:
+        # Get predicted speeds from LSTM if not provided
+        if request.predicted_speeds is None or len(request.predicted_speeds) == 0:
+            if lstm_model is None:
+                raise HTTPException(status_code=503, detail="LSTM model not available")
+            
+            # Generate synthetic base sequence for prediction
+            fetcher = NYCTrafficDataFetcher()
+            try:
+                speed_df = fetcher.fetch_cross_bronx_traffic_speeds(limit=100)
+                recent_speeds = speed_df['speed'].tail(24).values
+            except Exception:
+                recent_speeds = np.linspace(35, 45, 24)
+            finally:
+                fetcher.close()
+            
+            # Normalize and predict
+            speeds_normalized = (recent_speeds - lstm_model.speed_min) / \
+                               (lstm_model.speed_max - lstm_model.speed_min)
+            input_sequence = speeds_normalized.reshape(24, 1)
+            
+            num_steps = request.prediction_hours * 4  # 15-min intervals
+            predicted_normalized = lstm_model.predict_future(input_sequence, steps_ahead=num_steps)
+            predicted_speeds = [
+                lstm_model.denormalize_prediction(p) for p in predicted_normalized
+            ]
+        else:
+            predicted_speeds = request.predicted_speeds
+        
+        # Run HMM prediction
+        result = advanced_analytics.hmm.predict_24h_states(
+            predicted_speeds=predicted_speeds,
+            baseline_pm25=request.baseline_pm25
+        )
+        
+        return result
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"HMM prediction error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+
+
+class MonteCarloRequest(BaseModel):
+    """Request model for Monte Carlo simulation"""
+    tax_amount: float
+    num_iterations: int = 10000
+
+
+@app.post("/analytics/monte-carlo", tags=["Advanced Analytics"])
+async def run_monte_carlo_simulation(request: MonteCarloRequest):
+    """
+    Run Monte Carlo simulation for freight tax impact uncertainty.
+    
+    Runs N iterations with stochastic parameters:
+    - Elasticity: N(-0.4, 0.1)
+    - PM2.5 dispersion: N(0.12, 0.02) µg/m³ per 1000 trucks
+    - Asthma response: N(0.022, 0.005)
+    
+    Returns probability distribution and confidence intervals.
+    """
+    global advanced_analytics
+    
+    if advanced_analytics is None:
+        raise HTTPException(status_code=503, detail="Analytics engine not initialized")
+    
+    try:
+        # Optionally update iteration count
+        if request.num_iterations != 10000:
+            mc_config = MonteCarloConfig(num_iterations=request.num_iterations)
+            from analytics import MonteCarloSimulator
+            temp_mc = MonteCarloSimulator(mc_config)
+            result = temp_mc.run_simulation(request.tax_amount)
+        else:
+            result = advanced_analytics.monte_carlo.run_simulation(request.tax_amount)
+        
+        return result
+    
+    except Exception as e:
+        logger.error(f"Monte Carlo error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Simulation error: {str(e)}")
+
+
+@app.get("/analytics/pathfinding", tags=["Advanced Analytics"])
+async def analyze_truck_diversion(tax_amount: float = 50):
+    """
+    Analyze truck diversion behavior using A* pathfinding.
+    
+    Models whether trucks will divert through residential streets
+    based on cost comparison with residential penalty.
+    
+    Addresses model exclusion: 'Truck routing through residential streets'
+    """
+    global advanced_analytics
+    
+    if advanced_analytics is None:
+        raise HTTPException(status_code=503, detail="Analytics engine not initialized")
+    
+    try:
+        result = advanced_analytics.pathfinder.analyze_diversion(tax_amount)
+        return result
+    
+    except Exception as e:
+        logger.error(f"Pathfinding error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Pathfinding error: {str(e)}")
+
+
+@app.get("/analytics/pathfinding/batch", tags=["Advanced Analytics"])
+async def batch_analyze_diversion():
+    """
+    Analyze truck diversion across multiple tax levels.
+    
+    Tests tax amounts: $0, $25, $50, $75, $100
+    Returns diversion threshold where residential routing begins.
+    """
+    global advanced_analytics
+    
+    if advanced_analytics is None:
+        raise HTTPException(status_code=503, detail="Analytics engine not initialized")
+    
+    try:
+        result = advanced_analytics.pathfinder.batch_analyze()
+        return result
+    
+    except Exception as e:
+        logger.error(f"Batch pathfinding error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
+
+
+@app.get("/analytics/technical-docs", tags=["Advanced Analytics"])
+async def get_technical_documentation():
+    """
+    Get comprehensive technical documentation for all advanced analytics models.
+    
+    Includes:
+    - HMM transition matrix and emission model details
+    - Monte Carlo sampling methodology
+    - A* pathfinding algorithm and residential penalty logic
+    
+    Designed for the 'Technical Rigor' section of the Model Info tab.
+    """
+    global advanced_analytics
+    
+    if advanced_analytics is None:
+        raise HTTPException(status_code=503, detail="Analytics engine not initialized")
+    
+    return advanced_analytics.get_all_technical_docs()
 
 
 if __name__ == "__main__":
@@ -827,12 +1023,19 @@ if __name__ == "__main__":
     print("  ✓ Real-time NYC DOT traffic data via Socrata API")
     print("  ✓ Emissions and health impact modeling")
     print("  ✓ Speed limit scenario comparison (50mph vs 60mph)")
+    print("  ✓ Hidden Markov Model for Environmental States")
+    print("  ✓ Monte Carlo Simulation for Uncertainty")
+    print("  ✓ A* Pathfinding for Residential Diversion")
     print("\nAPI Endpoints:")
-    print("  GET  /traffic/current    - Real-time traffic data")
-    print("  POST /traffic/predict    - LSTM traffic predictions")
-    print("  GET  /model/info         - Model architecture")
-    print("  POST /model/train        - Retrain model")
-    print("  POST /simulate           - Freight tax simulation (legacy)")
+    print("  GET  /traffic/current          - Real-time traffic data")
+    print("  POST /traffic/predict          - LSTM traffic predictions")
+    print("  GET  /model/info               - Model architecture")
+    print("  POST /model/train              - Retrain model")
+    print("  POST /simulate                 - Freight tax simulation")
+    print("  POST /analytics/hmm/predict    - HMM state prediction")
+    print("  POST /analytics/monte-carlo    - Monte Carlo simulation")
+    print("  GET  /analytics/pathfinding    - A* route analysis")
+    print("  GET  /analytics/technical-docs - Technical documentation")
     print("\n" + "="*60 + "\n")
 
     uvicorn.run(app, host="0.0.0.0", port=8000)

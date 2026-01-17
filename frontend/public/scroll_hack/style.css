@@ -1,0 +1,253 @@
+/* Base Styles */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    --border-radius: 24px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    overflow-x: hidden;
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), 
+                url('https://images.unsplash.com/photo-1586023492125-27b3a4ac02a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 2rem;
+    z-index: 10;
+}
+
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.hero h1 {
+    font-size: 4.5rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.hero h2 {
+    font-size: 1.8rem;
+    font-weight: 400;
+    margin-bottom: 2rem;
+    line-height: 1.4;
+}
+
+.hero h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem;
+    color: #ff6b6b;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+}
+
+.hero-quote {
+    font-style: italic;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    border-left: 4px solid #ff6b6b;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0 8px 8px 0;
+}
+
+.stats {
+    font-weight: 600;
+    color: #ff9e7d;
+    margin-top: 1.5rem !important;
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    opacity: 0.8;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0) translateX(-50%);
+    }
+    40% {
+        transform: translateY(-10px) translateX(-50%);
+    }
+    60% {
+        transform: translateY(-5px) translateX(-50%);
+    }
+}
+
+/* Layout */
+.container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+}
+
+#map {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+    margin-top: 0;
+}
+
+#scrolly {
+    position: relative;
+    z-index: 2;
+    margin-top: 100vh; /* Push content below hero */
+    pointer-events: none;
+    width: 100%;
+    max-width: 45rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1rem;
+}
+
+/* Scrollytelling Content */
+.scrolly-content {
+    position: relative;
+    padding: 2rem 0;
+    margin: 0 auto;
+    width: 100%;
+    pointer-events: none;
+}
+
+.step {
+    margin: 50vh 0;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    max-width: 100%;
+}
+
+.step:first-child {
+    margin-top: 10vh;
+}
+
+.step:last-child {
+    margin-bottom: 100vh;
+}
+
+.step h2 {
+    margin-bottom: 1rem;
+    color: #1a1a1a;
+}
+
+.step p {
+    color: #4a4a4a;
+    margin-bottom: 1.5rem;
+}
+
+.step canvas {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 1rem 0;
+    display: block;
+}
+
+/* Mapbox Overrides */
+.mapboxgl-ctrl {
+    display: none;
+}
+
+/* Enable map interactions behind scroll content */
+#scrolly,
+.scrolly-content,
+.step {
+    pointer-events: none;
+}
+
+/* Make text and interactive elements clickable */
+.step h2,
+.step h3,
+.step h4,
+.step p,
+.step a,
+.step button,
+.step [class*="btn"],
+.step [role="button"],
+.step div[id$="-legend"],
+#hvi-legend,
+#park-access-legend,
+#asthma-legend {
+    pointer-events: auto;
+}
+
+/* Ensure map controls are interactive */
+.mapboxgl-ctrl-group,
+.mapboxgl-ctrl-zoom-in,
+.mapboxgl-ctrl-zoom-out,
+.mapboxgl-ctrl-compass {
+    pointer-events: auto !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 3rem;
+    }
+    
+    .hero h2 {
+        font-size: 1.4rem;
+    }
+    
+    .hero-content {
+        padding: 1.5rem;
+    }
+    
+    #scrolly {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+    
+    .step:first-child {
+        margin-top: 5vh;
+    }
+}
