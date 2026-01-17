@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "React Frontend for Urban Futures LEAP - Climate Justice Hackathon",
   "private": true,
-  "homepage": "https://chqiu666.github.io/Freight-Traffic-Emissions-CBX",
+  "homepage": "https://anlawyer.github.io/Freight-Traffic-Emissions-CBX",
   "dependencies": {
     "framer-motion": "^10.18.0",
     "leaflet": "^1.9.4",
