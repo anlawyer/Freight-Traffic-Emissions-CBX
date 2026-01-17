@@ -67,6 +67,10 @@ See `API_SPECIFICATION.md` for full details.
 ---
 
 ![Alt text for screen readers](1.png)
+![Alt text for screen readers](2.png)
+![Alt text for screen readers](3.png)
+![Alt text for screen readers](4.png)
+![Alt text for screen readers](5.png)
 
 **Version**: 1.0.0  
 **Last Updated**: January 2026  
