@@ -115,46 +115,6 @@ const translations = {
 
 // ==================== CONSTANTS ====================
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
-/* STATIC DATA MODE FOR GITHUB PAGES */
-const USE_STATIC_DATA = true; // Toggle this for GitHub Pages build
-
-// Helper to route API calls to static JSON or live backend
-const getApiUrl = (endpoint, body = null) => {
-  if (!USE_STATIC_DATA) return `${API_BASE_URL}${endpoint}`;
-
-  switch (endpoint) {
-    case '/baseline': return '/static_api/baseline.json';
-    case '/geojson/soundview': return '/static_api/soundview.geojson';
-    case '/simulate': return '/static_api/simulation.json';
-    case '/traffic/current': return '/static_api/current_traffic.json';
-    case '/model/info': return '/static_api/model_info.json';
-    case '/analytics/technical-docs': return '/static_api/technical_docs.json';
-    case '/traffic/predict':
-      // Parse body if string to choose scenario
-      let b = body;
-      try {
-        if (typeof body === 'string') b = JSON.parse(body);
-      } catch (e) { }
-
-      return b?.speed_limit_scenario === 'current_50mph'
-        ? '/static_api/prediction_50.json'
-        : '/static_api/prediction_60.json';
-    case '/analytics/hmm/predict': return '/static_api/hmm_prediction.json';
-    case '/analytics/monte-carlo': return '/static_api/monte_carlo.json';
-    default: return `${API_BASE_URL}${endpoint}`;
-  }
-};
-
-// Wrapper for fetch to handle static mode (forces GET)
-const apiFetch = async (endpoint, options = {}) => {
-  if (USE_STATIC_DATA) {
-    const url = getApiUrl(endpoint, options.body);
-    // Force GET for static files, ignore body/method
-    return fetch(url);
-  }
-  return fetch(`${API_BASE_URL}${endpoint}`, options);
-};
 const SOUNDVIEW_CENTER = [40.824, -73.875];
 const MAX_TAX = 100;
 
@@ -215,7 +175,7 @@ function App() {
   // API Calls
   const fetchBaseline = async () => {
     try {
-      const response = await apiFetch('/baseline');
+      const response = await fetch(`${API_BASE_URL}/baseline`);
       if (response.ok) {
         const data = await response.json();
         setBaselineData(data);
@@ -227,7 +187,7 @@ function App() {
 
   const fetchGeojson = async () => {
     try {
-      const response = await apiFetch('/geojson/soundview');
+      const response = await fetch(`${API_BASE_URL}/geojson/soundview`);
       if (response.ok) {
         const data = await response.json();
         setGeojsonData(data);
@@ -240,7 +200,7 @@ function App() {
   const simulate = async (tax) => {
     setLoading(true);
     try {
-      const response = await apiFetch('/simulate', {
+      const response = await fetch(`${API_BASE_URL}/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tax_amount: tax })
@@ -262,7 +222,7 @@ function App() {
   // New ML API Calls
   const fetchTrafficData = async () => {
     try {
-      const response = await apiFetch('/traffic/current');
+      const response = await fetch(`${API_BASE_URL}/traffic/current`);
       if (response.ok) {
         const data = await response.json();
         setTrafficData(data);
@@ -274,7 +234,7 @@ function App() {
 
   const fetchModelInfo = async () => {
     try {
-      const response = await apiFetch('/model/info');
+      const response = await fetch(`${API_BASE_URL}/model/info`);
       if (response.ok) {
         const data = await response.json();
         setModelInfo(data);
@@ -287,7 +247,7 @@ function App() {
   const predictTraffic = async (scenario) => {
     setPredictionLoading(true);
     try {
-      const response = await apiFetch('/traffic/predict', {
+      const response = await fetch(`${API_BASE_URL}/traffic/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -326,7 +286,7 @@ function App() {
   // Advanced Analytics API Calls
   const fetchTechnicalDocs = async () => {
     try {
-      const response = await apiFetch('/analytics/technical-docs');
+      const response = await fetch(`${API_BASE_URL}/analytics/technical-docs`);
       if (response.ok) {
         const data = await response.json();
         setTechnicalDocs(data);
@@ -338,7 +298,7 @@ function App() {
 
   const fetchMonteCarlo = async (tax = taxAmount) => {
     try {
-      const response = await apiFetch('/analytics/monte-carlo', {
+      const response = await fetch(`${API_BASE_URL}/analytics/monte-carlo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -358,7 +318,7 @@ function App() {
 
   const fetchHMMPrediction = async (speeds = null) => {
     try {
-      const response = await apiFetch('/analytics/hmm/predict', {
+      const response = await fetch(`${API_BASE_URL}/analytics/hmm/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -396,12 +356,12 @@ function App() {
       // Step 1: Run both traffic predictions
       console.log('📊 Running traffic predictions...');
       const [response50, response60] = await Promise.all([
-        apiFetch('/traffic/predict', {
+        fetch(`${API_BASE_URL}/traffic/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ speed_limit_scenario: 'current_50mph', prediction_hours: 24 })
         }),
-        apiFetch('/traffic/predict', {
+        fetch(`${API_BASE_URL}/traffic/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ speed_limit_scenario: 'optimized_60mph', prediction_hours: 24 })
@@ -426,7 +386,7 @@ function App() {
       // Step 2: Run HMM with predicted speeds
       console.log('🌡️ Running HMM prediction...');
       if (pred50Data && pred50Data.predicted_speeds && pred50Data.predicted_speeds.length > 0) {
-        const hmmResponse = await apiFetch('/analytics/hmm/predict', {
+        const hmmResponse = await fetch(`${API_BASE_URL}/analytics/hmm/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -449,7 +409,7 @@ function App() {
 
       // Step 3: Run Monte Carlo simulation
       console.log('🎲 Running Monte Carlo simulation...');
-      const mcResponse = await apiFetch('/analytics/monte-carlo', {
+      const mcResponse = await fetch(`${API_BASE_URL}/analytics/monte-carlo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

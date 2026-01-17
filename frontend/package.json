@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "React Frontend for Urban Futures LEAP - Climate Justice Hackathon",
   "private": true,
+  "homepage": "https://anlawyer.github.io/Freight-Traffic-Emissions-CBX",
   "dependencies": {
     "framer-motion": "^10.18.0",
     "leaflet": "^1.9.4",
@@ -18,7 +19,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -40,6 +43,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0"
+    "@testing-library/user-event": "^13.5.0",
+    "gh-pages": "^6.3.0"
   }
 }

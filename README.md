@@ -1,5 +1,7 @@
 # Urban Futures LEAP - Freight Tax Climate Impact Tool
 
+freightemissions.vercel.app
+
 A web app that models how a freight tax on the Cross-Bronx Expressway impacts air quality and health outcomes in Soundview, the Bronx.
 
 ## What it does
