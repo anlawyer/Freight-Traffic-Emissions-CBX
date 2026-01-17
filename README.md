@@ -1,8 +1,7 @@
 # Urban Futures LEAP - Freight Tax Climate Impact Tool
-https://sriyathotakura.github.io/Scroll/
-freightemissions.vercel.app
 
 A web app that models how a freight tax on the Cross-Bronx Expressway impacts air quality and health outcomes in Soundview, the Bronx.
+https://sriyathotakura.github.io/Scroll/
 
 ## What it does
 
@@ -13,6 +12,12 @@ The tool lets you adjust a tax amount ($0-$100) and instantly see:
 - An interactive map of the affected area
 
 The model uses economic elasticity (how truck companies respond to taxes) to estimate emissions reductions, then calculates health and economic impacts.
+
+![Alt text for screen readers](1.png)
+![Alt text for screen readers](2.png)
+![Alt text for screen readers](3.png)
+![Alt text for screen readers](4.png)
+![Alt text for screen readers](5.png)
 
 ## Tech Stack
 
@@ -66,7 +71,14 @@ See `API_SPECIFICATION.md` for full details.
 
 ---
 
-![Alt text for screen readers](Screenshot 2026-01-17 124400.png)
+# Sources/Datasets
+- https://a816-dohbesp.nyc.gov/IndicatorPublic/data-explorer/climate/?id=2143#display=trend
+- https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9/about_data
+- https://data.cityofnewyork.us/City-Government/LION/2v4z-66xt/about_data
+- https://a816-dohbesp.nyc.gov/IndicatorPublic/data-features/hvi/
+- https://data.cityofnewyork.us/Transportation/New-York-City-Truck-Routes-Map-/wnu3-egq7
+- https://a816-dohbesp.nyc.gov/IndicatorPublic/data-explorer/asthma/?id=2414#display=map
+- https://gisportalny.dot.ny.gov/portalny/apps/webappviewer/index.html?id=28537cbc8b5941e19cf8e959b16797b4
 
 **Version**: 1.0.0  
 **Last Updated**: January 2026  
