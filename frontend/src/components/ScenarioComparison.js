@@ -1,12 +1,13 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ErrorBar, Cell, ReferenceLine } from 'recharts';
 import { motion } from 'framer-motion';
 
 /**
  * Scenario Comparison Component
  * Compares 50mph vs 60mph speed limit scenarios
+ * Now includes error bars from Monte Carlo confidence intervals
  */
-const ScenarioComparison = ({ scenario50, scenario60 }) => {
+const ScenarioComparison = ({ scenario50, scenario60, monteCarloData, language = 'en' }) => {
   if (!scenario50 || !scenario60) {
     return (
       <div style={{
@@ -25,9 +26,9 @@ const ScenarioComparison = ({ scenario50, scenario60 }) => {
 
   // Use the average speeds from backend (more accurate than recalculating)
   const avg50 = scenario50.average_predicted_speed ||
-                (scenario50.predicted_speeds.reduce((a, b) => a + b, 0) / scenario50.predicted_speeds.length);
+    (scenario50.predicted_speeds.reduce((a, b) => a + b, 0) / scenario50.predicted_speeds.length);
   const avg60 = scenario60.average_predicted_speed ||
-                (scenario60.predicted_speeds.reduce((a, b) => a + b, 0) / scenario60.predicted_speeds.length);
+    (scenario60.predicted_speeds.reduce((a, b) => a + b, 0) / scenario60.predicted_speeds.length);
 
   // Prepare comparison data - NORMALIZED to 0-100 scale for visualization
   // We'll show actual values in tooltips and cards
@@ -196,6 +197,217 @@ const ScenarioComparison = ({ scenario50, scenario60 }) => {
         📊 Chart values are normalized to show relative differences. Hover over bars to see actual values.
       </div>
 
+      {/* Monte Carlo Confidence Intervals */}
+      {monteCarloData && monteCarloData.confidence_intervals && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          style={{
+            marginBottom: '24px',
+            padding: '20px',
+            backgroundColor: '#fefce8',
+            borderRadius: '12px',
+            border: '1px solid #fde047'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '16px'
+          }}>
+            <span style={{ fontSize: '18px' }}>📊</span>
+            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#854d0e' }}>
+              {language === 'en' ? 'Uncertainty Analysis (Monte Carlo)' : 'Análisis de Incertidumbre (Monte Carlo)'}
+            </h4>
+            <span style={{
+              marginLeft: 'auto',
+              padding: '4px 8px',
+              backgroundColor: '#fef08a',
+              borderRadius: '4px',
+              fontSize: '11px',
+              color: '#854d0e'
+            }}>
+              {monteCarloData.num_iterations?.toLocaleString() || '10,000'} {language === 'en' ? 'iterations' : 'iteraciones'}
+            </span>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px'
+          }}>
+            {/* Asthma Reduction CI */}
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #fde68a'
+            }}>
+              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
+                {language === 'en' ? 'Asthma Reduction (95% CI)' : 'Reducción del Asma (IC 95%)'}
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#16a34a' }}>
+                {monteCarloData.confidence_intervals.asthma_visits_avoided?.lower_95?.toFixed(1) || '0.0'} – {' '}
+                {monteCarloData.confidence_intervals.asthma_visits_avoided?.upper_95?.toFixed(1) || '0.0'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                {language === 'en' ? 'cases/year' : 'casos/año'}
+              </div>
+              {/* Error bar visualization */}
+              <div style={{ marginTop: '8px', height: '8px', position: 'relative' }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '10%',
+                  right: '10%',
+                  height: '2px',
+                  backgroundColor: '#22c55e',
+                  top: '3px'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '10%',
+                  width: '2px',
+                  height: '8px',
+                  backgroundColor: '#22c55e'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  right: '10%',
+                  width: '2px',
+                  height: '8px',
+                  backgroundColor: '#22c55e'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#16a34a'
+                }} />
+              </div>
+            </div>
+
+            {/* PM2.5 Reduction CI */}
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #fde68a'
+            }}>
+              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
+                {language === 'en' ? 'PM2.5 Reduction (95% CI)' : 'Reducción PM2.5 (IC 95%)'}
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#3b82f6' }}>
+                {monteCarloData.confidence_intervals.pm25_reduction?.lower_95?.toFixed(3) || '0.000'} – {' '}
+                {monteCarloData.confidence_intervals.pm25_reduction?.upper_95?.toFixed(3) || '0.000'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#6b7280' }}>µg/m³</div>
+              {/* Error bar visualization */}
+              <div style={{ marginTop: '8px', height: '8px', position: 'relative' }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '10%',
+                  right: '10%',
+                  height: '2px',
+                  backgroundColor: '#3b82f6',
+                  top: '3px'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '10%',
+                  width: '2px',
+                  height: '8px',
+                  backgroundColor: '#3b82f6'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  right: '10%',
+                  width: '2px',
+                  height: '8px',
+                  backgroundColor: '#3b82f6'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#2563eb'
+                }} />
+              </div>
+            </div>
+
+            {/* Health Benefit Value CI */}
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #fde68a'
+            }}>
+              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>
+                {language === 'en' ? 'Health Benefit Value (95% CI)' : 'Valor del Beneficio de Salud (IC 95%)'}
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#8b5cf6' }}>
+                ${(monteCarloData.confidence_intervals.health_benefit_usd?.lower_95 / 1000)?.toFixed(0) || '0'}k – {' '}
+                ${(monteCarloData.confidence_intervals.health_benefit_usd?.upper_95 / 1000)?.toFixed(0) || '0'}k
+              </div>
+              <div style={{ fontSize: '11px', color: '#6b7280' }}>USD/year</div>
+              {/* Error bar visualization */}
+              <div style={{ marginTop: '8px', height: '8px', position: 'relative' }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '10%',
+                  right: '10%',
+                  height: '2px',
+                  backgroundColor: '#8b5cf6',
+                  top: '3px'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '10%',
+                  width: '2px',
+                  height: '8px',
+                  backgroundColor: '#8b5cf6'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  right: '10%',
+                  width: '2px',
+                  height: '8px',
+                  backgroundColor: '#8b5cf6'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#7c3aed'
+                }} />
+              </div>
+            </div>
+          </div>
+
+          <p style={{
+            margin: '12px 0 0 0',
+            fontSize: '11px',
+            color: '#92400e',
+            textAlign: 'center',
+            fontStyle: 'italic'
+          }}>
+            {language === 'en'
+              ? 'Error bars represent model uncertainty from Monte Carlo sampling of elasticity, PM2.5 dispersion, and health response parameters'
+              : 'Las barras de error representan la incertidumbre del modelo del muestreo Monte Carlo de elasticidad, dispersión PM2.5 y parámetros de respuesta de salud'}
+          </p>
+        </motion.div>
+      )}
+
       {/* Key Insights */}
       <div style={{
         display: 'grid',
@@ -354,10 +566,10 @@ const ScenarioComparison = ({ scenario50, scenario60 }) => {
           {speedImprovement > 0 && emissionsChange < 0 && pm25Change < 0
             ? `🎯 Optimal Outcome: Raising the speed limit to 60 mph improves traffic flow by ${speedImprovement}%, reduces PM2.5 pollution by ${Math.abs(pm25Change)}%, and cuts CO2 emissions by ${Math.abs(emissionsChange)}%. This creates a win-win: faster commutes AND cleaner air for Soundview residents.`
             : speedImprovement > 0 && pm25Change < 0
-            ? `✅ Recommended: The 60 mph limit improves traffic speed by ${speedImprovement}% and reduces air pollution by ${Math.abs(pm25Change)}%. While CO2 emissions may vary, the health benefits from reduced PM2.5 are significant for this vulnerable community.`
-            : speedImprovement > 0
-            ? `⚠️ Mixed Results: Traffic flow improves by ${speedImprovement}%, but environmental benefits are limited. Consider pairing speed optimization with vehicle electrification or freight routing strategies for maximum climate impact.`
-            : `⚖️ Status Quo: Current 50 mph limit maintains baseline conditions. Further modeling with additional policy interventions (congestion pricing, EV incentives) may reveal better optimization strategies.`}
+              ? `✅ Recommended: The 60 mph limit improves traffic speed by ${speedImprovement}% and reduces air pollution by ${Math.abs(pm25Change)}%. While CO2 emissions may vary, the health benefits from reduced PM2.5 are significant for this vulnerable community.`
+              : speedImprovement > 0
+                ? `⚠️ Mixed Results: Traffic flow improves by ${speedImprovement}%, but environmental benefits are limited. Consider pairing speed optimization with vehicle electrification or freight routing strategies for maximum climate impact.`
+                : `⚖️ Status Quo: Current 50 mph limit maintains baseline conditions. Further modeling with additional policy interventions (congestion pricing, EV incentives) may reveal better optimization strategies.`}
         </p>
       </div>
     </motion.div>
