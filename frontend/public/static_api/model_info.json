@@ -1,0 +1,46 @@
+{
+  "status": "ready",
+  "model": {
+    "layers": [
+      {
+        "type": "input",
+        "units": 24,
+        "activation": "tanh"
+      },
+      {
+        "type": "lstm",
+        "units": 128,
+        "return_sequences": false,
+        "activation": "tanh"
+      },
+      {
+        "type": "dropout",
+        "rate": 0.2
+      },
+      {
+        "type": "dense",
+        "units": 64,
+        "activation": "relu"
+      },
+      {
+        "type": "output",
+        "units": 1,
+        "activation": "linear"
+      }
+    ],
+    "optimizer": "adam",
+    "loss": "mse",
+    "metrics": [
+      "mae"
+    ]
+  },
+  "speed_range": {
+    "min": 0.0,
+    "max": 80.0
+  },
+  "training_info": {
+    "epochs": 100,
+    "batch_size": 32,
+    "last_trained": "2026-01-17T11:57:27.178704"
+  }
+}

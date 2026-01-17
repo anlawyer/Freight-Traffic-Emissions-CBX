@@ -1,0 +1,12 @@
+{
+  "tax_amount": 44.0,
+  "trucks_diverted": 183,
+  "trucks_diverted_percentage": 3.52,
+  "pm25_reduction_ug_m3": 0.022,
+  "pm25_reduction_kg": 8030.0,
+  "baseline_pm25_ug_m3": 13.2,
+  "new_pm25_ug_m3": 13.18,
+  "health_benefit_value_usd": 48180.0,
+  "cost_benefit_ratio": 0.0,
+  "co2_equivalent_reduction_kg": 3888750
+}
