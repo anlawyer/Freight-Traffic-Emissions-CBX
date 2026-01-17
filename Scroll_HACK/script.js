@@ -32,7 +32,9 @@ const layers = {
     priorityZone: 'priority-zone',
     schools: 'schools',
     hospitals: 'hospitals',
-    hviLayer: 'hvi-layer'
+    hviLayer: 'hvi-layer',
+    isochrone15min: '15min-isochrone',
+    parks: 'parks'
 };
 
 // Track hero section visibility
@@ -433,7 +435,7 @@ async function loadParkAccessHexbinLayer() {
         type: 'fill',
         source: 'park-access-hexbins',
         paint: {
-            // Color gradient: Deep Green (High Access) to Hot Pink/Neon Orange (Low Access)
+            // Color gradient: Deep Green (High Access) to Bright Neon Orange/Pink (Low Access)
             'fill-color': [
                 'interpolate',
                 ['linear'],
@@ -445,15 +447,36 @@ async function loadParkAccessHexbinLayer() {
                 80, '#90EE90',     // Light green (good)
                 100, '#228B22'     // Deep green (100% - best access)
             ],
-            'fill-opacity': 0.75,
-            'fill-outline-color': '#ffffff'
+            // Inverted opacity: Low access = high opacity (0.9), High access = low opacity (0.2)
+            'fill-opacity': [
+                'interpolate',
+                ['linear'],
+                ['get', 'parkAccess'],
+                0, 0.9,    // 0% access = 0.9 opacity (high debt, more visible)
+                100, 0.2   // 100% access = 0.2 opacity (low debt, fades into basemap)
+            ]
         },
         layout: {
             visibility: 'none'
         }
     });
 
-    console.log('3D Park Access hexbin layer added');
+    // Add stroke layer for grid feel
+    map.addLayer({
+        id: `${layers.parkAccessHexbins}-stroke`,
+        type: 'line',
+        source: 'park-access-hexbins',
+        paint: {
+            'line-color': '#333333',  // Dark color for grid feel
+            'line-width': 0.5,
+            'line-opacity': 0.3
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
+
+    console.log('2D Park Access hexbin layer added');
 
     // Add hover interaction with glassmorphism popup
     let popup = null;
@@ -497,7 +520,7 @@ async function loadParkAccessHexbinLayer() {
                             ${ntaName}
                         </h3>
                         <p style="margin: 0; font-size: 12px; color: ${parkAccess < 50 ? '#FF1493' : '#228B22'}; font-weight: 600;">
-                            Only ${parkAccess ? parkAccess.toFixed(1) : 'N/A'}% of residents can walk to a park
+                            ${ntaName}: Only ${parkAccess ? parkAccess.toFixed(1) : 'N/A'}% of residents can walk to a park.
                         </p>
                         <p style="margin: 4px 0 0 0; font-size: 11px; color: #888;">
                             Year: ${parkYear}
@@ -746,6 +769,44 @@ async function loadAsthmaHexbinLayer() {
 map.on('load', async () => {
     // Add initial data sources and layers (await to ensure traffic data is preloaded)
     await initializeMapLayers();
+    
+    // Add 15-minute isochrone layer
+    map.addSource('15min-isochrone-source', {
+        type: 'geojson',
+        data: 'data/Geojson/15min_isochrone.geojson'
+    });
+
+    map.addLayer({
+        'id': layers.isochrone15min,
+        'type': 'fill',
+        'source': '15min-isochrone-source',
+        'paint': {
+            'fill-color': '#4dac26',
+            'fill-opacity': 0.3,
+            'fill-outline-color': '#4dac26'
+        },
+        'minzoom': 0,
+        'maxzoom': 24
+    });
+
+    // Add parks layer
+    map.addSource('parks-source', {
+        type: 'geojson',
+        data: 'data/Geojson/parks.geojson'
+    });
+
+    map.addLayer({
+        'id': layers.parks,
+        'type': 'fill',
+        'source': 'parks-source',
+        'paint': {
+            'fill-color': '#1b9e77',
+            'fill-opacity': 0.5,
+            'fill-outline-color': '#1b9e77'
+        },
+        'minzoom': 0,
+        'maxzoom': 24
+    });
 
     // Load HVI data
     loadHVILayer();
@@ -797,6 +858,52 @@ map.on('load', async () => {
         scroller.resize();
     }, 100);
 });
+
+// Function to convert traffic volume point data to lines
+function convertTrafficPointsToLines(pointData) {
+    // Group points by SegmentID
+    const segments = {};
+    pointData.features.forEach(feature => {
+        const segmentId = feature.properties.SegmentID;
+        if (!segments[segmentId]) {
+            segments[segmentId] = [];
+        }
+        segments[segmentId].push({
+            coordinates: feature.geometry.coordinates,
+            traffic: feature.properties.Total_Traffic
+        });
+    });
+
+    // Create LineString features from grouped points
+    const lineFeatures = [];
+    Object.keys(segments).forEach(segmentId => {
+        const points = segments[segmentId];
+        if (points.length > 1) {
+            // Sort points by longitude to create a line (simple approach)
+            points.sort((a, b) => a.coordinates[0] - b.coordinates[0]);
+            
+            // Calculate average traffic for this segment
+            const avgTraffic = points.reduce((sum, p) => sum + (p.traffic || 0), 0) / points.length;
+            
+            lineFeatures.push({
+                type: 'Feature',
+                properties: {
+                    SegmentID: segmentId,
+                    Total_Traffic: avgTraffic
+                },
+                geometry: {
+                    type: 'LineString',
+                    coordinates: points.map(p => p.coordinates)
+                }
+            });
+        }
+    });
+
+    return {
+        type: 'FeatureCollection',
+        features: lineFeatures
+    };
+}
 
 async function initializeMapLayers() {
     // Preload traffic volume data for faster rendering
@@ -871,6 +978,60 @@ async function initializeMapLayers() {
         console.log('Traffic heatmap layer added and ready');
     } catch (error) {
         console.error('Error loading traffic data:', error);
+    }
+
+    // Load traffic_volume.geojson for step 2 overlay (glowing line layer)
+    try {
+        console.log('Loading traffic_volume.geojson for glowing line overlay...');
+        const trafficVolumeResponse = await fetch('./data/Geojson/traffic_volume.geojson');
+        const trafficVolumeData = await trafficVolumeResponse.json();
+        console.log('Traffic volume data loaded:', trafficVolumeData.features.length, 'points');
+
+        // Convert points to lines
+        const trafficLines = convertTrafficPointsToLines(trafficVolumeData);
+        console.log('Converted to', trafficLines.features.length, 'line segments');
+
+        // Add traffic volume line source
+        map.addSource('traffic-volume-lines', {
+            type: 'geojson',
+            data: trafficLines
+        });
+
+        // Add glowing line layer with neon heat effect
+        map.addLayer({
+            id: 'traffic-volume-lines',
+            type: 'line',
+            source: 'traffic-volume-lines',
+            paint: {
+                'line-color': '#FF1493',  // Bright neon pink/magenta
+                'line-width': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    10, 2,
+                    13, 4,
+                    15, 6
+                ],
+                'line-opacity': 0.9,
+                'line-blur': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    10, 1,
+                    13, 2,
+                    15, 4
+                ]
+            },
+            layout: {
+                'line-join': 'round',
+                'line-cap': 'round',
+                visibility: 'none'  // Start hidden, show on step 2
+            }
+        });
+
+        console.log('Traffic volume glowing line layer added');
+    } catch (error) {
+        console.error('Error loading traffic volume line data:', error);
     }
     // Add truck routes source
     map.addSource('truck-routes', {
@@ -1138,12 +1299,25 @@ function handleStepEnter(response) {
         if (layout) {
             map.setLayoutProperty(layer, 'visibility', 'none');
         }
+        // Also hide stroke layers
+        try {
+            map.setLayoutProperty(`${layer}-stroke`, 'visibility', 'none');
+        } catch (e) {
+            // Stroke layer might not exist
+        }
     });
     
     // Hide heatmap by default
     map.setLayoutProperty('traffic-heatmap', 'visibility', 'none');
     
-    // Reset map view if needed
+    // Hide traffic volume lines by default
+    try {
+        map.setLayoutProperty('traffic-volume-lines', 'visibility', 'none');
+    } catch (e) {
+        // Layer might not exist yet
+    }
+    
+    // Reset map view if needed (step 2 is 2D, so pitch should be 0)
     if (map.getPitch() > 0) {
         map.easeTo({ pitch: 0, duration: 1000 });
     }
@@ -1168,27 +1342,28 @@ function handleStepEnter(response) {
             break;
             
         case 2:
-            // Show park access hexbins with traffic overlay to visualize urban severance
+            // Show park access hexbins (2D) with traffic overlay to visualize urban severance
             if (parkAccessDataLoaded) {
                 map.setLayoutProperty(layers.parkAccessHexbins, 'visibility', 'visible');
+                map.setLayoutProperty(`${layers.parkAccessHexbins}-stroke`, 'visibility', 'visible');
 
                 // Move hexbins below traffic to show how highways create no-access zones
                 try {
-                    // Ensure traffic heatmap is on top
-                    map.moveLayer('traffic-heatmap');
+                    // Ensure traffic line layer is on top
+                    map.moveLayer('traffic-volume-lines');
                 } catch (e) {
                     console.error('Error reordering layers:', e);
                 }
             }
 
-            // Show traffic heatmap as glowing overlay showing the barrier
-            map.setLayoutProperty('traffic-heatmap', 'visibility', 'visible');
+            // Show traffic volume as glowing line overlay showing the barrier (the incision)
+            map.setLayoutProperty('traffic-volume-lines', 'visibility', 'visible');
 
-            // Fly to Soundview, Bronx with pitch for 3D view
+            // Fly to Soundview, Bronx (2D view, no pitch needed)
             map.flyTo({
                 center: [-73.8667, 40.8250], // Soundview, Bronx
                 zoom: 13,
-                pitch: 50,  // 3D angle to see hexbin heights
+                pitch: 0,  // 2D view
                 duration: 2000
             });
             break;
@@ -1331,6 +1506,27 @@ function setupSliderInteraction() {
         healthOutcome.textContent = (healthImprovement / 1000000).toFixed(1);
     });
 }
+
+    // Toggle layers based on scroll position
+    scroller.on('stepEnter', (response) => {
+        const layer = response.element.dataset.layer;
+        const isActive = response.direction === 'down';
+        
+        if (layer === 'environmental-impact') {
+            map.setLayoutProperty(layers.isochrone15min, 'visibility', 'visible');
+            map.setLayoutProperty(layers.parks, 'visibility', 'visible');
+        }
+    });
+
+    scroller.on('stepExit', (response) => {
+        const layer = response.element.dataset.layer;
+        const isActive = response.direction === 'up';
+        
+        if (layer === 'environmental-impact') {
+            map.setLayoutProperty(layers.isochrone15min, 'visibility', 'none');
+            map.setLayoutProperty(layers.parks, 'visibility', 'none');
+        }
+    });
 
 // Handle window resize
 window.addEventListener('resize', () => {
