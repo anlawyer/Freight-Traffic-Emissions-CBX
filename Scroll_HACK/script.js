@@ -993,10 +993,51 @@ async function initializeMapLayers() {
     } catch (error) {
         console.error('Error loading traffic volume line data:', error);
     }
-    // Add truck routes source
+        // Add truck routes source
     map.addSource('truck-routes', {
         type: 'geojson',
         data: './data/Geojson/truck_routesnyc.geojson'
+    });
+
+    // Add 15-minute isochrone source
+    map.addSource('isochrone-15min', {
+        type: 'geojson',
+        data: './data/Geojson/15min_isochrone.geojson'
+    });
+
+    // Add parks source
+    map.addSource('parks', {
+        type: 'geojson',
+        data: './data/Geojson/parks.geojson'
+    });
+
+    // Add 15-minute isochrone layer (semi-transparent fill with outline)
+    map.addLayer({
+        'id': 'isochrone-15min-fill',
+        'type': 'fill',
+        'source': 'isochrone-15min',
+        'paint': {
+            'fill-color': '#4CAF50',
+            'fill-opacity': 0.1,
+            'fill-outline-color': '#2E7D32'
+        },
+        'layout': {
+            'visibility': 'none'  // Will be shown in step 2
+        }
+    });
+
+    // Add parks layer
+    map.addLayer({
+        'id': 'parks-layer',
+        'type': 'fill',
+        'source': 'parks',
+        'paint': {
+            'fill-color': '#2E7D32',
+            'fill-opacity': 0.7
+        },
+        'layout': {
+            'visibility': 'none'  // Will be shown in step 2
+        }
     });
 
     // Add truck routes layer with orange dotted line style
@@ -1267,6 +1308,14 @@ function handleStepEnter(response) {
         }
     });
     
+    // Hide isochrone and parks layers by default
+    try {
+        map.setLayoutProperty('isochrone-15min-fill', 'visibility', 'none');
+        map.setLayoutProperty('parks-layer', 'visibility', 'none');
+    } catch (e) {
+        console.log('Layers not yet added to map:', e);
+    }
+    
     // Hide heatmap by default
     map.setLayoutProperty('traffic-heatmap', 'visibility', 'none');
     
@@ -1306,6 +1355,10 @@ function handleStepEnter(response) {
             if (parkAccessDataLoaded) {
                 map.setLayoutProperty(layers.parkAccessHexbins, 'visibility', 'visible');
                 map.setLayoutProperty(`${layers.parkAccessHexbins}-stroke`, 'visibility', 'visible');
+
+                // Show 15-minute isochrone and parks layers
+                map.setLayoutProperty('isochrone-15min-fill', 'visibility', 'visible');
+                map.setLayoutProperty('parks-layer', 'visibility', 'visible');
 
                 // Move hexbins below traffic to show how highways create no-access zones
                 try {
