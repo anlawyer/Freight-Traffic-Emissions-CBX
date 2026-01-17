@@ -32,9 +32,7 @@ const layers = {
     priorityZone: 'priority-zone',
     schools: 'schools',
     hospitals: 'hospitals',
-    hviLayer: 'hvi-layer',
-    isochrone15min: '15min-isochrone',
-    parks: 'parks'
+    hviLayer: 'hvi-layer'
 };
 
 // Track hero section visibility
@@ -769,44 +767,6 @@ async function loadAsthmaHexbinLayer() {
 map.on('load', async () => {
     // Add initial data sources and layers (await to ensure traffic data is preloaded)
     await initializeMapLayers();
-    
-    // Add 15-minute isochrone layer
-    map.addSource('15min-isochrone-source', {
-        type: 'geojson',
-        data: 'data/Geojson/15min_isochrone.geojson'
-    });
-
-    map.addLayer({
-        'id': layers.isochrone15min,
-        'type': 'fill',
-        'source': '15min-isochrone-source',
-        'paint': {
-            'fill-color': '#4dac26',
-            'fill-opacity': 0.3,
-            'fill-outline-color': '#4dac26'
-        },
-        'minzoom': 0,
-        'maxzoom': 24
-    });
-
-    // Add parks layer
-    map.addSource('parks-source', {
-        type: 'geojson',
-        data: 'data/Geojson/parks.geojson'
-    });
-
-    map.addLayer({
-        'id': layers.parks,
-        'type': 'fill',
-        'source': 'parks-source',
-        'paint': {
-            'fill-color': '#1b9e77',
-            'fill-opacity': 0.5,
-            'fill-outline-color': '#1b9e77'
-        },
-        'minzoom': 0,
-        'maxzoom': 24
-    });
 
     // Load HVI data
     loadHVILayer();
@@ -1506,27 +1466,6 @@ function setupSliderInteraction() {
         healthOutcome.textContent = (healthImprovement / 1000000).toFixed(1);
     });
 }
-
-    // Toggle layers based on scroll position
-    scroller.on('stepEnter', (response) => {
-        const layer = response.element.dataset.layer;
-        const isActive = response.direction === 'down';
-        
-        if (layer === 'environmental-impact') {
-            map.setLayoutProperty(layers.isochrone15min, 'visibility', 'visible');
-            map.setLayoutProperty(layers.parks, 'visibility', 'visible');
-        }
-    });
-
-    scroller.on('stepExit', (response) => {
-        const layer = response.element.dataset.layer;
-        const isActive = response.direction === 'up';
-        
-        if (layer === 'environmental-impact') {
-            map.setLayoutProperty(layers.isochrone15min, 'visibility', 'none');
-            map.setLayoutProperty(layers.parks, 'visibility', 'none');
-        }
-    });
 
 // Handle window resize
 window.addEventListener('resize', () => {
